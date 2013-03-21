@@ -87,6 +87,7 @@ end
 class SpiralGenerator
   include Enumerable
 
+
   def self.start_num(i)
     return i if i <= 2
     start_num ||= 2
