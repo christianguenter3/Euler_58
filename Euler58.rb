@@ -4,7 +4,7 @@ class Spiral
 
   def initialize(layers)
     @layers = []
-    (1..layers).each{|x| @layers << Layer.new(x)}
+    (1..layers).each{ _add_next_layer }
     @@singleton = self
   end
 
@@ -19,14 +19,23 @@ class Spiral
   end
 
   def get_diagonal_prime_quot
-    prime_count = 0
-    diagonals = get_diagonals
-    diagonals.each { |x| prime_count += 1 if Prime.prime?(x) }
-    return 1.0 * prime_count / diagonals.size
+    return 1.0 * @prime_count / @elem_count
   end
 
-  def _add_next_layer(X)
-    @layers << Layer.new(x)
+  def _add_next_layer
+    @current_layer ||= 1
+    @layers << Layer.new(@current_layer)
+    @current_layer += 1
+
+    _recalc_prime_and_elem_count()
+  end
+
+  def _recalc_prime_and_elem_count
+    @prime_count ||= 0
+    @elem_count ||= 0
+    diagonals = @layers[-1].get_diagonal
+    diagonals.each { |x| @prime_count += 1 if Prime.prime?(x) }
+    @elem_count += diagonals.size
   end
 
   def get_max_side_len
@@ -34,11 +43,11 @@ class Spiral
   end
 
   def self.get_prime_quote_lower_10
-    index = 1
     prime_quot = 1.0
+    spiral = Spiral.new(1)
     while prime_quot > 0.4
-      index += 1
-      prime_quot = Spiral.new(index).get_diagonal_prime_quot
+      spiral._add_next_layer
+      prime_quot = spiral.get_diagonal_prime_quot
     end
     return @@singleton.get_max_side_len
   end
@@ -80,7 +89,9 @@ class SpiralGenerator
 
   def self.start_num(i)
     return i if i <= 2
-    return ((i - 2) * 8) + start_num( i - 1)
+    start_num ||= 2
+    (3..i).each { |x| start_num = ((x-2) * 8) + start_num  }
+    return start_num
   end
 
   def each(layer_id,&block)
